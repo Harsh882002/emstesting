@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Table, Button, Modal, Form } from 'react-bootstrap';
+import { Container, Table, Button, Modal, Form, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// import Navbar from './Components/Navbar';
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import Demo from './Components/Demo';
 
-
-
-function App() {
+function Demo() {
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('add');
@@ -80,77 +76,81 @@ function App() {
 
   return (
     <Container className="my-5">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Employee Management System</h2>
-        <Button variant="primary" onClick={handleShowAddModal}>
-          <i className="fa-solid fa-user-plus me-2"></i>  Add Employee
-        </Button>
-      </div>
-      <Demo />
-      {/* <Navbar /> */}
-
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Manager</th>
-            <th>Department</th>
-            <th>Salary</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees.map(employee => (
-            <tr key={employee.id}>
-              <td>{employee.id}</td>
-              <td>{employee.name}</td>
-              <td>{employee.manager}</td>
-              <td>{employee.department}</td>
-              <td>{employee.salary}</td>
-              <td>
-                <Button variant="info" className="me-2" onClick={() => handleShowEditModal(employee)}>
-                  <i class="fa-solid fa-pen me-2"></i>Edit
-                </Button>
-                <Button variant="danger" onClick={() => handleDelete(employee.id)}>
-                  <i class="fa-solid fa-trash me-2"></i>Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <Card className="shadow-lg">
+        <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
+          <h2 className="mb-0">Employee Management System</h2>
+          <Button variant="light" onClick={handleShowAddModal}>
+            <i className="fas fa-user-plus me-2"></i> Add Employee
+          </Button>
+        </Card.Header>
+        <Card.Body>
+          <Table striped bordered hover responsive className="text-center">
+            <thead className="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Manager</th>
+                <th>Department</th>
+                <th>Salary</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map(employee => (
+                <tr key={employee.id}>
+                  <td>{employee.id}</td>
+                  <td>{employee.name}</td>
+                  <td>{employee.manager}</td>
+                  <td>{employee.department}</td>
+                  <td>${employee.salary}</td>
+                  <td>
+                    <Button variant="outline-info" className="me-2" onClick={() => handleShowEditModal(employee)}>
+                      <i className="fas fa-edit me-1"></i>Edit
+                    </Button>
+                    <Button variant="outline-danger" onClick={() => handleDelete(employee.id)}>
+                      <i className="fas fa-trash-alt me-1"></i>Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Card.Body>
+        <Card.Footer className="text-muted text-center">
+          Total Employees: <span className="fw-bold">{employees.length}</span>
+        </Card.Footer>
+      </Card>
       
-      <div className="text-muted mt-3">Total Employees: {employees.length}</div>
-
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>{modalType === 'add' ? 'Add Employee' : 'Edit Employee'}</Modal.Title>
+      {/* Modal for Add/Edit Employee */}
+      <Modal show={showModal} onHide={handleCloseModal} centered>
+        <Modal.Header closeButton className="bg-primary text-white">
+          <Modal.Title><i className={`fas ${modalType === 'add' ? 'fa-user-plus' : 'fa-edit'}`}></i> {modalType === 'add' ? 'Add Employee' : 'Edit Employee'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
-          {modalType === 'edit' && (
-            <Form.Group className="mb-3">
-              <Form.Label>ID</Form.Label>
-              <Form.Control type="number" name="id" value={currentEmployee.id} onChange={handleChange} required />
-            </Form.Group>
-          )}
+            {modalType === 'edit' && (
+              <Form.Group className="mb-3">
+                <Form.Label>ID</Form.Label>
+                <Form.Control type="number" name="id" value={currentEmployee.id} onChange={handleChange} readOnly />
+              </Form.Group>
+            )}
             
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
               <Form.Control type="text" name="name" value={currentEmployee.name} onChange={handleChange} required />
+              <Form.Control.Feedback type="invalid">
+                Please provide a valid name.
+              </Form.Control.Feedback>
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Manager</Form.Label>
               <Form.Control type="text" name="manager" value={currentEmployee.manager} onChange={handleChange} />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Department</Form.Label>
-              <Form.Select
-                name="department"
-                value={currentEmployee.department}
-                onChange={handleChange}
-              >
+              <Form.Select name="department" value={currentEmployee.department} onChange={handleChange} required>
                 <option value="">-- Select Department --</option>
                 <option value="HR">HR</option>
                 <option value="Finance">Finance</option>
@@ -158,15 +158,21 @@ function App() {
                 <option value="Sales">Sales</option>
                 <option value="Marketing">Marketing</option>
               </Form.Select>
-              {/* <Form.Control type="text" name="department" value={currentEmployee.department} onChange={handleChange} /> */}
+              <Form.Control.Feedback type="invalid">
+                Please select a department.
+              </Form.Control.Feedback>
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Salary</Form.Label>
-              <Form.Control type="number" name="salary" value={currentEmployee.salary} onChange={handleChange} />
+              <Form.Control type="number" name="salary" value={currentEmployee.salary} onChange={handleChange} required />
             </Form.Group>
-            <Button variant="primary" type="submit">
-              {modalType === 'add' ? 'Add' : 'Save Changes'}
-            </Button>
+
+            <div className="d-grid mt-4">
+              <Button variant="primary" type="submit">
+                {modalType === 'add' ? 'Add' : 'Save Changes'}
+              </Button>
+            </div>
           </Form>
         </Modal.Body>
       </Modal>
@@ -174,4 +180,4 @@ function App() {
   );
 }
 
-export default App;
+export default Demo;
