@@ -34,6 +34,6 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.PAT_TOKEN }}  # Use your PAT here
+          personal_token: ${{ secrets.PAT_TOKEN }}  # <- THIS IS THE FIX
           publish_dir: ./build
           commit_message: "Deploy React App to GitHub Pages using PAT"
