@@ -1,25 +1,38 @@
+// import React from 'react'
+// import Demo from './Components/Demo'
+
+// const App = () => {
+//   return (
+//     <div>
+//       <Demo />
+//     </div>
+//   )
+// }
+
+// export default App
+
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Table, Button, Modal, Form } from 'react-bootstrap';
+import { Container, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-// import Navbar from './Components/Navbar';
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import Demo from './Components/Demo';
 
-
+import Navbar from './Components/Navbar';
+import Searchbar from './Components/Searchbar';
+import EmployeeTable from './Components/EmployeeTable';
+import Pagination from './Components/Pagination';
+import AddEmployee from './Components/AddEmployee';
+import EditEmployee from './Components/EditEmployee';
 
 function App() {
   const [employees, setEmployees] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState('add');
-  const [currentEmployee, setCurrentEmployee] = useState({
-    id: '',
-    name: '',
-    manager: '',
-    department: '',
-    salary: ''
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [employeesPerPage] = useState(5);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [currentEmployee, setCurrentEmployee] = useState(null);
 
   const fetchEmployees = async () => {
     try {
@@ -34,142 +47,109 @@ function App() {
     fetchEmployees();
   }, []);
 
-  const handleShowAddModal = () => {
-    setModalType('add');
-    setCurrentEmployee({ id: '', name: '', manager: '', department: '', salary: '' });
-    setShowModal(true);
-  };
+  // Handlers for Modals
+  const handleShowAddModal = () => setShowAddModal(true);
+  const handleCloseAddModal = () => setShowAddModal(false);
 
   const handleShowEditModal = (employee) => {
-    setModalType('edit');
     setCurrentEmployee(employee);
-    setShowModal(true);
+    setShowEditModal(true);
+  };
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setCurrentEmployee(null);
   };
 
-  const handleCloseModal = () => setShowModal(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentEmployee({ ...currentEmployee, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // CRUD Operations
+  const handleAddSubmit = async (newEmployee) => {
     try {
-      if (modalType === 'add') {
-        const {id, ...employeewithoutId} = currentEmployee;
-        await axios.post('http://localhost:5000/employees', employeewithoutId);
-      } else {
-        await axios.put(`http://localhost:5000/employees/${currentEmployee.id}`, currentEmployee);
-      }
+      await axios.post('http://localhost:5000/employees', newEmployee);
       fetchEmployees();
-      handleCloseModal();
+      handleCloseAddModal();
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error adding employee:", error);
+    }
+  };
+
+  const handleEditSubmit = async (updatedEmployee) => {
+    try {
+      await axios.put(`http://localhost:5000/employees/${updatedEmployee.id}`, updatedEmployee);
+      fetchEmployees();
+      handleCloseEditModal();
+    } catch (error) {
+      console.error("Error updating employee:", error);
     }
   };
 
   const handleDelete = async (employeeId) => {
-    try {
-      await axios.delete(`http://localhost:5000/employees/${employeeId}`);
-      fetchEmployees();
-    } catch (error) {
-      console.error("Error deleting employee:", error);
+    if (window.confirm("Are you sure you want to delete this entry?")) {
+      try {
+        await axios.delete(`http://localhost:5000/employees/${employeeId}`);
+        fetchEmployees();
+      } catch (error) {
+        console.error("Error deleting employee:", error);
+      }
     }
   };
 
+  // Search and Pagination Logic
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
+  const filteredEmployees = employees.filter(employee =>
+    String(employee.id).toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (employee.manager && employee.manager.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    employee.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    String(employee.salary).includes(searchQuery)
+  );
+
+  const indexOfLastEmployee = currentPage * employeesPerPage;
+  const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
+  const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <Container className="my-5">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Employee Management System</h2>
-        <Button variant="primary" onClick={handleShowAddModal}>
-          <i className="fa-solid fa-user-plus me-2"></i>  Add Employee
-        </Button>
-      </div>
-      <Demo />
-      {/* <Navbar /> */}
-
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Manager</th>
-            <th>Department</th>
-            <th>Salary</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees.map(employee => (
-            <tr key={employee.id}>
-              <td>{employee.id}</td>
-              <td>{employee.name}</td>
-              <td>{employee.manager}</td>
-              <td>{employee.department}</td>
-              <td>{employee.salary}</td>
-              <td>
-                <Button variant="info" className="me-2" onClick={() => handleShowEditModal(employee)}>
-                  <i class="fa-solid fa-pen me-2"></i>Edit
-                </Button>
-                <Button variant="danger" onClick={() => handleDelete(employee.id)}>
-                  <i class="fa-solid fa-trash me-2"></i>Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <Card className="shadow-lg">
+        <Navbar onShowAddModal={handleShowAddModal} />
+        <Card.Body>
+          <Searchbar onSearch={handleSearch} onClear={handleClearSearch} value={searchQuery} />
+          <EmployeeTable
+            employees={currentEmployees}
+            onEdit={handleShowEditModal}
+            onDelete={handleDelete}
+          />
+          <Pagination
+            itemsPerPage={employeesPerPage}
+            totalItems={filteredEmployees.length}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        </Card.Body>
+        <Card.Footer className="text-muted text-center py-3">
+          Total Employees: <span className="fw-bold">{employees.length}</span>
+        </Card.Footer>
+      </Card>
       
-      <div className="text-muted mt-3">Total Employees: {employees.length}</div>
-
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>{modalType === 'add' ? 'Add Employee' : 'Edit Employee'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleSubmit}>
-          {modalType === 'edit' && (
-            <Form.Group className="mb-3">
-              <Form.Label>ID</Form.Label>
-              <Form.Control type="number" name="id" value={currentEmployee.id} onChange={handleChange} required />
-            </Form.Group>
-          )}
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
-              <Form.Control type="text" name="name" value={currentEmployee.name} onChange={handleChange} required />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Manager</Form.Label>
-              <Form.Control type="text" name="manager" value={currentEmployee.manager} onChange={handleChange} />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Department</Form.Label>
-              <Form.Select
-                name="department"
-                value={currentEmployee.department}
-                onChange={handleChange}
-              >
-                <option value="">-- Select Department --</option>
-                <option value="HR">HR</option>
-                <option value="Finance">Finance</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Sales">Sales</option>
-                <option value="Marketing">Marketing</option>
-              </Form.Select>
-              {/* <Form.Control type="text" name="department" value={currentEmployee.department} onChange={handleChange} /> */}
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Salary</Form.Label>
-              <Form.Control type="number" name="salary" value={currentEmployee.salary} onChange={handleChange} />
-            </Form.Group>
-            <Button variant="primary" type="submit">
-              {modalType === 'add' ? 'Add' : 'Save Changes'}
-            </Button>
-          </Form>
-        </Modal.Body>
-      </Modal>
+      {/* Modals for Add and Edit */}
+      <AddEmployee show={showAddModal} onHide={handleCloseAddModal} onSubmit={handleAddSubmit} />
+      {currentEmployee && (
+        <EditEmployee
+          show={showEditModal}
+          onHide={handleCloseEditModal}
+          onSubmit={handleEditSubmit}
+          employee={currentEmployee}
+        />
+      )}
     </Container>
   );
 }
