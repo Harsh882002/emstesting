@@ -3,7 +3,7 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches:
-      - main  # Deploy when pushing to main branch
+      - main  # Deploy whenever you push to main branch
 
 jobs:
   build-and-deploy:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: false
+          persist-credentials: false  # Important for using PAT
 
       # 2. Setup Node.js
       - name: Setup Node.js
@@ -30,10 +30,10 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # 5. Deploy to GitHub Pages
+      # 5. Deploy to GitHub Pages using PAT
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}  # Use your PAT here
           publish_dir: ./build
-          commit_message: "First deploy to GitHub Pages"
+          commit_message: "Deploy React App to GitHub Pages using PAT"
