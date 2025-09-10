@@ -3,38 +3,35 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches:
-      - main  # Deploy whenever you push to main branch
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: false   # Important for using PAT
-          fetch-depth: 0               # Required for first-time deploy
+          persist-credentials: false
+          fetch-depth: 0
 
-      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 4. Build React app
       - name: Build project
         run: npm run build
 
-      # 5. Deploy to GitHub Pages using PAT
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          personal_token: ${{ secrets.PAT_TOKEN }}  # Use your PAT
+          personal_token: ${{ secrets.PAT_TOKEN }}
           publish_dir: ./build
-          commit_message: "Deploy React App to GitHub Pages using PAT"
+          commit_message: "Deploy React App using PAT"
+          user_name: "Harsh882002"
+          user_email: "Harsh882002@users.noreply.github.com"
