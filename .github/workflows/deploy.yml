@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Required for gh-pages history
+          fetch-depth: 0  # Needed for gh-pages branch history
 
       # 2. Setup Node.js
       - name: Setup Node.js
@@ -32,10 +32,11 @@ jobs:
 
       # 5. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3.9.3
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.PAT_TOKEN }}  # Your PAT stored in repo secrets
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
+          destination_branch: gh-pages
           commit_message: "Deploy React App to GitHub Pages"
           user_name: "Harsh882002"
           user_email: "Harsh882002@users.noreply.github.com"
