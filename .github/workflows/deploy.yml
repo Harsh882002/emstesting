@@ -6,7 +6,7 @@ on:
       - main  # Trigger deploy on push to main branch
 
 jobs:
-  build-and-deploy:
+  build-and-deploy:  
     runs-on: ubuntu-latest
 
     steps:
